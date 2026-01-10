@@ -1,0 +1,253 @@
+# Neural Trading Pipeline Configuration
+# Version: 1.0.0
+# Based on SRS and Pipeline Doctrine
+
+version: "1.0.0"
+
+# Data Configuration
+data:
+  csv_path: "data_raw/binance_btcusdt_1min_ccxt.csv"
+  lookback: 60  # 60-minute window as per SRS
+  window_step: 1  # Generate sample every minute
+  sequence_limit: 2880  # 144 batches × 20 as per SRS
+
+  # Dataset splits
+  train_split: 0.7
+  val_split: 0.15
+  test_split: 0.15
+
+  # Data augmentation
+  add_gaussian_noise: true
+  noise_std: 0.01
+
+# Learnable Technical Indicators Configuration
+# 30+ learnable parameters as per SRS Section 3.2.2
+indicators:
+  enabled: true
+
+  # Moving Averages (3 periods = 3 learnable params)
+  ma_periods: [5, 15, 30]
+
+  # MACD settings (3 settings × 3 params = 9 learnable params)
+  macd_settings:
+    - [12, 26, 9]
+    - [5, 35, 5]
+    - [19, 39, 9]
+
+  # Custom MACD pairs (3 pairs × 3 params = 9 learnable params)
+  custom_macd_pairs:
+    - [8, 17, 9]
+    - [10, 20, 5]
+    - [15, 30, 10]
+
+  # RSI periods (3 periods = 3 learnable params)
+  rsi_periods: [9, 21, 30]
+
+  # Bollinger Bands (3 periods = 3 learnable params)
+  bb_periods: [10, 20, 30]
+
+  # Momentum (3 periods = 3 learnable params)
+  momentum_periods: [5, 10, 15]
+
+  # Total: 3 + 9 + 9 + 3 + 3 + 3 = 30 learnable parameters
+
+# Model Architecture Configuration
+model:
+  version: "v3.0"  # Current model version
+
+  # LSTM Configuration
+  lstm_units: 128
+  lstm_layers: 2
+  bidirectional: true  # Bidirectional LSTM as per SRS
+
+  # Transformer Configuration
+  transformer_heads: 4  # Multi-head attention
+  transformer_dim: 128
+  transformer_ff_dim: 512
+
+  # Indicator Subnet Configuration
+  indicator_subnet:
+    hidden_units: [64, 32]
+    output_dim: 20
+
+  # Regularization
+  dropout: 0.2  # Dropout rate
+  l2_reg: 0.001  # L2 regularization on learnable indicators
+
+  # Multi-horizon output towers
+  num_horizons: 3  # h0 (1min), h1 (5min), h2 (15min)
+  independent_towers: true  # Independent towers per horizon
+
+# Loss Functions Configuration
+losses:
+  # Point Loss for price predictions (Huber)
+  point_loss:
+    type: "huber"
+    weight: 1.0
+    delta: 1.0
+
+  # Direction Loss (Focal Loss) - SRS specifies alpha=0.7, gamma=1.0
+  direction_loss:
+    type: "focal"
+    weight: 1.0
+    alpha: 0.7
+    gamma: 1.0
+
+  # Variance Loss (Negative Log Likelihood)
+  variance_loss:
+    type: "nll"
+    weight: 1.0
+
+  # Trend Losses
+  local_trend_loss:
+    type: "mse"
+    weight: 0.5
+
+  global_trend_loss:
+    type: "mse"
+    weight: 0.3
+
+  extended_trend_loss:
+    type: "mse"
+    weight: 0.2
+
+# Metrics Configuration
+metrics:
+  # Direction metrics
+  direction_accuracy: true
+  direction_f1: true
+  direction_mcc: true  # Matthews Correlation Coefficient
+
+  # Price metrics
+  price_mae: true  # Mean Absolute Error
+  price_mape: true  # Mean Absolute Percentage Error
+
+  # Multi-horizon tracking
+  per_horizon: true
+
+# Training Configuration - SRS Section 3.5.3
+training:
+  batch_size: 144  # As per SRS
+  epochs: 40  # As per SRS
+  learning_rate: 0.001  # 1e-3 as per SRS
+
+  # Optimizer
+  optimizer: "adam"
+  beta_1: 0.9
+  beta_2: 0.999
+  epsilon: 1e-7
+
+  # Gradient clipping
+  gradient_clip_norm: 5.0  # As per SRS
+
+  # Early stopping - monitors val_dir_mcc_h1 as per SRS
+  early_stopping:
+    enabled: true
+    monitor: "val_dir_mcc_h1"
+    patience: 40  # As per SRS
+    mode: "max"
+    restore_best_weights: true
+
+  # Model checkpointing
+  model_checkpoint:
+    enabled: true
+    filepath: "models_saved/model_{epoch:02d}_{val_dir_mcc_h1:.4f}.h5"
+    monitor: "val_dir_mcc_h1"
+    save_best_only: true
+    mode: "max"
+
+  # TensorBoard logging
+  tensorboard:
+    enabled: true
+    log_dir: "logs/tensorboard"
+    histogram_freq: 1
+    write_graph: true
+
+  # Indicator parameters logging
+  indicator_logging:
+    enabled: true
+    output_file: "logs/indicator_params_history.csv"
+
+  # Mixed precision training (GPU optimization)
+  mixed_precision: false
+
+# Inference Configuration
+inference:
+  # Model artifacts
+  model_path: "models_saved/nn_learnable_indicators_v3.weights.h5"
+  scaler_input_path: "models_saved/scaler_input.joblib"
+  scaler_output_path: "models_saved/scaler.joblib"
+
+  # Batch inference
+  batch_size: 32
+
+  # Confidence thresholds
+  min_confidence: 0.5
+  high_confidence_threshold: 0.7
+
+# Trading Signals Configuration
+signals:
+  # Position sizing
+  size_high: 1.2
+  size_normal: 1.0
+  size_low: 0.6
+  conf_high_thresh: 0.7
+  conf_low_thresh: 0.5
+
+  # Stop loss
+  base_stop_pct: 0.02  # 2% base stop loss
+  max_variance_multiplier: 2.0
+
+  # Multi-horizon agreement
+  agreement_threshold: 0.67  # 2 out of 3 horizons
+
+  # Variance spike detection
+  spike_threshold: 2.0
+
+# Backtesting Configuration
+backtesting:
+  initial_capital: 10000.0
+  commission: 0.001  # 0.1% commission
+  slippage: 0.0005  # 0.05% slippage
+
+  # Partial profit taking
+  tp1_close_pct: 0.33  # Close 33% at TP1
+  tp2_close_pct: 0.33  # Close 33% at TP2
+  tp3_close_pct: 0.34  # Close remaining 34% at TP3
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+  # File logging
+  file_enabled: true
+  file_path: "logs/training.log"
+
+  # Console logging
+  console_enabled: true
+
+# Experiment Tracking (Optional)
+experiment:
+  name: "neural_trading_v3"
+  tags:
+    - "multi-horizon"
+    - "learnable-indicators"
+    - "focal-loss"
+
+  # MLflow/W&B integration
+  tracking_uri: null
+  project_name: "neural_trading"
+
+# System Configuration
+system:
+  # Reproducibility
+  random_seed: 42
+
+  # Performance
+  num_workers: 4
+  prefetch_buffer: 2
+
+  # GPU
+  gpu_memory_growth: true
+  mixed_precision_policy: "mixed_float16"  # For GPU optimization
