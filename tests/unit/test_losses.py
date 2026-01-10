@@ -396,10 +396,11 @@ class TestLossIntegration:
         from src.models.hybrid_model import build_model
         model = build_model(sample_config)
 
-        # Model should have regularization losses
-        # Check model.losses
-
-
+        # Model should have regularization losses when L2 is enabled.
+        regularization_losses = model.losses
+        assert regularization_losses, "Expected at least one regularization loss when l2_reg is set."
+        for loss in regularization_losses:
+            assert isinstance(loss, tf.Tensor)
 class TestLossCalibration:
     """Test loss lambda calibration."""
 
