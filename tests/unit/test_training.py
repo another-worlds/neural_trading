@@ -87,8 +87,8 @@ class TestTrainer:
         trainer.save_scalers(input_scaler, output_scaler, tmp_path)
 
         # Check files exist
-
-
+        assert scaler_input_file.exists()
+        assert scaler_output_file.exists()
 class TestTrainingConfig:
     """Test training configuration."""
 
