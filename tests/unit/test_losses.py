@@ -332,14 +332,37 @@ class TestCompositeLoss:
 
     def test_loss_weights_applied(self):
         """Should apply loss weights (lambdas)."""
-        config = {
+        config_low_weight = {
             'point_loss': {'type': 'huber', 'weight': 1.0},
-            'direction_loss': {'type': 'focal', 'weight': 2.0},
+            'direction_loss': {'type': 'focal', 'weight': 1.0},
+        }
+        
+        config_high_weight = {
+            'point_loss': {'type': 'huber', 'weight': 1.0},
+            'direction_loss': {'type': 'focal', 'weight': 5.0},
         }
 
-        composite_loss = CompositeLoss(config)
-
-        # Higher weight should increase contribution
+        composite_loss_low = CompositeLoss(config_low_weight)
+        composite_loss_high = CompositeLoss(config_high_weight)
+        
+        # Create test data where direction loss will differ significantly
+        y_true = {
+            'price_h0': tf.constant([[42100.0]]),
+            'direction_h0': tf.constant([[1.0]]),  # True positive direction
+        }
+        
+        y_pred = {
+            'price_h0': tf.constant([[42105.0]]),  # Small price error
+            'direction_h0': tf.constant([[0.5]]),  # Moderate direction error
+        }
+        
+        loss_low = composite_loss_low(y_true, y_pred)
+        loss_high = composite_loss_high(y_true, y_pred)
+        
+        # Higher weight on direction_loss should increase total loss
+        assert tf.is_tensor(loss_low)
+        assert tf.is_tensor(loss_high)
+        assert loss_high.numpy() > loss_low.numpy()
 
     def test_cascade_lambda_updates(self, sample_config):
         """Updating lambdas in config should cascade to composite loss."""
@@ -351,7 +374,28 @@ class TestCompositeLoss:
 
         new_composite_loss = CompositeLoss(new_config)
 
-        # Should use new weights
+        # Create test data
+        y_true = {
+            'price_h0': tf.constant([[42100.0]]),
+            'direction_h0': tf.constant([[1.0]]),
+            'variance_h0': tf.constant([[0.1]]),
+        }
+        
+        y_pred = {
+            'price_h0': tf.constant([[42105.0]]),
+            'direction_h0': tf.constant([[0.5]]),
+            'variance_h0': tf.constant([[0.12]]),
+        }
+        
+        loss_original = composite_loss(y_true, y_pred)
+        loss_updated = new_composite_loss(y_true, y_pred)
+        
+        # Updated config with higher direction_loss weight should yield different loss
+        assert tf.is_tensor(loss_original)
+        assert tf.is_tensor(loss_updated)
+        assert loss_updated.numpy() != loss_original.numpy()
+        # With higher direction weight, total loss should be higher
+        assert loss_updated.numpy() > loss_original.numpy()
 
 
 class TestLossIntegration:
