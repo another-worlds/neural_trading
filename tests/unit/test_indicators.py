@@ -334,12 +334,12 @@ class TestTotalLearnableParameters:
 
         # Total: 3 + 9 + 9 + 3 + 3 + 3 = 30 learnable parameters
         total_params = (
-            len(ma.trainable_variables[0]) +
+            ma.trainable_variables[0].shape[0] +
             sum(v.shape.num_elements() for v in macd.trainable_variables) +
             sum(v.shape.num_elements() for v in custom_macd.trainable_variables) +
-            len(rsi.trainable_variables[0]) +
-            len(bb.trainable_variables[0]) +
-            len(momentum.trainable_variables[0])
+            rsi.trainable_variables[0].shape[0] +
+            bb.trainable_variables[0].shape[0] +
+            momentum.trainable_variables[0].shape[0]
         )
 
         assert total_params >= 30
