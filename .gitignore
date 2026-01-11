@@ -139,7 +139,7 @@ logs/
 # Data
 *.csv
 *.parquet
-data/
+/data/
 !configs/*.csv
 
 # Model weights
