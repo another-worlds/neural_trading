@@ -236,16 +236,20 @@ def preprocess_data_step(data, args):
         print(f"⚠ Config not found: {args.config}, using defaults")
         config = {
             'data': {
-                'window_size': 60,
-                'horizons': {'h0': 1, 'h1': 5, 'h2': 15}
+                'lookback': 60,
+                'window_step': 1
             }
         }
 
     # Create preprocessor
     preprocessor = Preprocessor(config)
 
-    print(f"Window size: {config['data']['window_size']}")
-    print(f"Prediction horizons: {config['data']['horizons']}")
+    # Get window parameters from config (support both 'lookback' and 'window_size')
+    window_size = config['data'].get('lookback', config['data'].get('window_size', 60))
+    window_step = config['data'].get('window_step', 1)
+
+    print(f"Window size: {window_size}")
+    print(f"Window step: {window_step}")
 
     # Create windows
     print("\nCreating sliding windows...")
