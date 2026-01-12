@@ -14,6 +14,28 @@ This project implements the neural trading pipeline as specified in the SRS (Sof
 - **Uncertainty Quantification**: Variance estimates for each prediction
 - **Modular Design**: Registry-based component system with automatic integration
 - **Configuration-Driven**: YAML-based configuration with cascading updates
+- **Open-Source Data**: Fetch cryptocurrency data from Binance public API (no auth required!)
+
+## 🚀 Quick Start
+
+**Get started in 2 minutes!**
+
+```bash
+# 1. Install dependencies
+pip install -r requirements.txt
+
+# 2. Fetch data and launch pipeline
+python launch_pipeline.py --fetch-data --source binance --days 7 --evaluate
+
+# Or use synthetic data for testing
+python launch_pipeline.py --fetch-data --source synthetic --days 2 --evaluate
+```
+
+**That's it!** You now have data ready for the trading pipeline.
+
+📖 **See [QUICKSTART.md](QUICKSTART.md) for detailed guide and usage examples.**
+
+---
 
 ## Project Structure
 
