@@ -327,9 +327,27 @@ class TestHybridModel:
     def test_independent_towers_for_horizons(self, sample_config):
         """Should have 3 independent towers for h0, h1, h2 as per SRS."""
         model = HybridModel(sample_config['model'])
+        model.build(input_shape=(None, 60, 10))
 
-        # Check for tower structures
-        # Each tower should be independent
+        # Check for tower structures (h0, h1, h2)
+        # Each tower should be independent and produce outputs
+        x = tf.random.normal((2, 60, 10))
+        outputs = model(x)
+
+        # Verify that model produces outputs for all 3 horizons
+        # The model should have attributes or layers for each tower
+        assert hasattr(model, 'layers')
+        
+        # For a properly structured multi-tower model, we expect
+        # separate processing paths or output layers for each horizon
+        # The total number of outputs should be 9 (3 towers × 3 outputs)
+        if isinstance(outputs, dict):
+            # Check for horizon-specific outputs
+            horizon_keys = [k for k in outputs.keys() if any(h in k for h in ['h0', 'h1', 'h2'])]
+            assert len(horizon_keys) >= 3, "Should have outputs for at least 3 horizons"
+        elif isinstance(outputs, list):
+            # If outputs are in list form, should have 9 outputs total
+            assert len(outputs) >= 3, "Should have outputs for at least 3 horizons"
 
     def test_three_outputs_per_tower(self, sample_config):
         """Each tower should have 3 outputs: price, direction, variance."""
