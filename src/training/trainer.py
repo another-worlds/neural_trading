@@ -387,7 +387,7 @@ class Trainer:
         history = self.fit(model, train_ds, val_ds, callbacks)
 
         # 6. Save final weights
-        self.save_weights(model, Path(output_dir) / "final_weights.h5")
+        self.save_weights(model, Path(output_dir) / "final_model.weights.h5")
 
         # 7. Save scalers
         if self.input_scaler is not None and self.output_scaler is not None:

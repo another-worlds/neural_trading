@@ -116,7 +116,7 @@ def add_gaussian_noise(
 
     Args:
         data: Input data.
-        noise_std: Standard deviation of noise relative to data std.
+        noise_std: Standard deviation of noise (absolute value, not relative).
         seed: Random seed for reproducibility.
 
     Returns:
@@ -129,8 +129,9 @@ def add_gaussian_noise(
     if seed is not None:
         np.random.seed(seed)
 
-    data_std = np.std(data)
-    noise = np.random.normal(0, noise_std * data_std, data.shape)
+    # Use absolute noise_std, not relative to data std
+    # This ensures noise is added even for constant data
+    noise = np.random.normal(0, noise_std, data.shape)
     noisy_data = data + noise
 
     return noisy_data.astype(data.dtype)
