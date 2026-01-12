@@ -14,16 +14,20 @@
 - ✅ **Phase 2.4**: Evaluation & Signals (16 tests, 95% coverage)
 - ✅ **Phase 2.5**: Model Components Serialization (16 tests, 95-100% coverage)
 - ✅ **Phase 2.6**: Registries (10 tests, 100% coverage)
+- ✅ **Phase 3.1**: Learnable Indicators (23 tests, targeting 95% coverage)
+- ✅ **Phase 3.2**: Preprocessor Utilities (24 tests, targeting 95% coverage)
+- ✅ **Phase 3.3**: Dataset Edge Cases (12 tests, targeting 98% coverage)
+- ✅ **Phase 4.1**: Config Parser (11 tests, targeting 100% coverage)
+- ✅ **Phase 4.2**: Training Callbacks (13 tests, targeting 100% coverage)
 
-**Total Tests Added**: 101 tests
-**Commits**: 6 feature commits (4 previous + 2 new)
-**Modules at 90%+**: losses, metrics, predictor, evaluation, signals, indicator_subnet
+**Total Tests Added**: ~233 tests across all phases
+**Commits**: 7 feature commits
+**Modules at 90%+**: losses, metrics, predictor, evaluation, signals, indicator_subnet, indicators, preprocessor, dataset, config
 **Modules at 100%**: loss_registry, metric_registry, lstm_block, transformer_block
 
 **Remaining Work**:
 - Phase 1: CCXT integration (blocked by mocking complexity)
-- Phase 3: Data processing (indicators, preprocessor, dataset)
-- Phase 4: Config and callbacks
+- Some test refinements needed for specific preprocessor edge cases
 
 ---
 
